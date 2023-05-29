@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  dynamo:
+    image: amazon/dynamodb-local:latest
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    container_name: dynamo
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./docker/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    networks:
+      - developer
+  identification-uniform-sys:
+    build: .
+    volumes:
+      - "./:/app"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - dynamo
+    networks:
+      - developer
+
+networks:
+  developer:

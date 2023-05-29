@@ -1,0 +1,390 @@
+service: identification-uniform-sys
+
+frameworkVersion: '2 || 3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  lambdaHashingVersion: 20201221
+  region: us-east-1
+  stage: ${opt:stage, 'prod'}
+  logRetentionInDays: 14
+
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "logs:CreateLogGroup"
+            - "logs:CreateLogStream"
+            - "logs:PutLogEvents"
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:*:*:table/*"
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:ListBucket
+            - s3:DeleteObject
+            - s3:PutObjectAcl
+            - s3:GetObjectAcl
+          Resource:
+            - "arn:aws:s3:::detections-bucket"
+            - "arn:aws:s3:::detections-bucket/*"
+
+  environment:
+    STAGE: ${self:provider.stage}
+
+  httpApi:
+    authorizers:
+      customAuthorizer:
+        type: request
+        functionName: customAuthorizer
+    cors:
+      allowedOrigins:
+        - http://localhost:3008
+        - https://identification-uniform-interface.vercel.app
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+      allowCredentials: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-auto-swagger
+  - serverless-dynamodb-local
+  - serverless-offline
+  - serverless-s3-local
+
+custom:
+  serverless-offline:
+    host: '0.0.0.0'
+
+  dynamodb:
+    stages:
+      - local
+      - dev
+      - prod
+    start:
+      docker: true
+      host: localhost
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+
+  version: ${opt:version, 'v1'}
+
+  autoswagger:
+    title: 'Sistema de identificação de uniformes'
+    apiType: 'http'
+    generateSwaggerOnDeploy: true
+    swaggerPath: ${self:custom.version}/swagger
+    useStage: false
+    basePath: /${self:custom.version}
+    schemes: ['http', 'https']
+
+  s3:
+    host: localhost
+    directory: /tmp
+    s3ForcePathStyle: true
+
+package:
+  excludeDevDependencies: true
+  exclude:
+    - .git/**
+    - .test/**
+    - .github/**
+
+functions:
+  notFound:
+    handler: src/shared/notFound.notFoundProxy
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/{proxy+}
+          method: any
+
+  customAuthorizer:
+    handler: src/api/${self:custom.version}/auth/validateToken.validateToken
+
+  validateExternToken:
+    handler: src/api/${self:custom.version}/auth/validateToken.validateExternToken
+    events:
+      - httpApi:
+          path: /${self:custom.version}/validate
+          method: post
+
+  createUsers:
+    handler: src/api/${self:custom.version}/users/create.create
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/users
+          method: post
+
+  readUsers:
+    handler: src/api/${self:custom.version}/users/read.read
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/users
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  readUsersById:
+    handler: src/api/${self:custom.version}/users/read.readById
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/users/{id}
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  updateUsers:
+    handler: src/api/${self:custom.version}/users/update.update
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/users/{id}
+          method: put
+          authorizer:
+            name: customAuthorizer
+
+  deleteUsers:
+    handler: src/api/${self:custom.version}/users/delete.delete
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/users/{id}
+          method: delete
+          authorizer:
+            name: customAuthorizer
+
+  login:
+    handler: src/api/${self:custom.version}/auth/login.login
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/login
+          method: post
+
+  forgotPassword:
+    handler: src/api/${self:custom.version}/auth/forgotPassword.forgotPassword
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/forgot-password
+          method: post
+
+  createCompanies:
+    handler: src/api/${self:custom.version}/companies/create.create
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/companies
+          method: post
+          authorizer:
+            name: customAuthorizer
+
+  readCompanies:
+    handler: src/api/${self:custom.version}/companies/read.read
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/companies
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  readCompaniesById:
+    handler: src/api/${self:custom.version}/companies/read.readById
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/companies/{id}
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  updateCompanies:
+    handler: src/api/${self:custom.version}/companies/update.update
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/companies/{id}
+          method: put
+          authorizer:
+            name: customAuthorizer
+
+  deleteCompany:
+    handler: src/api/${self:custom.version}/companies/delete.delete
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/companies/{id}
+          method: delete
+          authorizer:
+            name: customAuthorizer
+
+  createPositions:
+    handler: src/api/${self:custom.version}/positions/create.create
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/positions
+          method: post
+          authorizer:
+            name: customAuthorizer
+
+  readPositions:
+    handler: src/api/${self:custom.version}/positions/read.read
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/positions
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  createIdentifications:
+    handler: src/api/${self:custom.version}/identifications/create.create
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/identifications
+          method: post
+          authorizer:
+            name: customAuthorizer
+
+  readIdentifications:
+    handler: src/api/${self:custom.version}/identifications/read.read
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/identifications
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  readPositionsById:
+    handler: src/api/${self:custom.version}/positions/read.readById
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/positions/{id}
+          method: get
+          authorizer:
+            name: customAuthorizer
+
+  updatePositions:
+    handler: src/api/${self:custom.version}/positions/update.update
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/positions/{id}
+          method: put
+          authorizer:
+            name: customAuthorizer
+
+  deletePositions:
+    handler: src/api/${self:custom.version}/positions/delete.delete
+    timeout: 29
+    events:
+      - httpApi:
+          path: /${self:custom.version}/positions/{id}
+          method: delete
+          authorizer:
+            name: customAuthorizer
+
+  preflight:
+    handler: src/shared/preflight.preflight
+    events:
+      - httpApi:
+          path: /${self:custom.version}/{proxy+}
+          method: options
+      - httpApi:
+          path: /${self:custom.version}/validate
+          method: options
+
+resources:
+ Resources:
+    identificationTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.stage}IdentificationTable
+        AttributeDefinitions:
+          - AttributeName: table
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: cnpj
+            AttributeType: S
+          - AttributeName: companyId
+            AttributeType: S
+          - AttributeName: pIdentificationId
+            AttributeType: S
+          - AttributeName: dateTime
+            AttributeType: S
+        KeySchema:
+          - AttributeName: table
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: UserEmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+          - IndexName: CompanyCnpjIndex
+            KeySchema:
+              - AttributeName: cnpj
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+          - IndexName: CompanyIdIndex
+            KeySchema:
+              - AttributeName: companyId
+                KeyType: HASH
+            Projection:
+              ProjectionType: 'ALL'
+          - IndexName: PositionIdIndex
+            KeySchema:
+              - AttributeName: pIdentificationId
+                KeyType: HASH
+              - AttributeName: dateTime
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+        BillingMode: PAY_PER_REQUEST
+
+    DetectionsBucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: detections-bucket

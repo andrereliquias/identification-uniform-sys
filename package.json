@@ -1,0 +1,34 @@
+{
+  "name": "identification-uniform-sys",
+  "version": "1.0.0",
+  "description": "Sistema de autenticação",
+  "scripts": {
+    "dev": "serverless offline start --stage local",
+    "deploy-master": "serverless deploy --verbose",
+    "deploy-development": "serverless deploy --verbose --stage dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndreReliquias/identification-uniform-sys"
+  },
+  "author": "André Reliquias",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AndreReliquias/identification-uniform-sys/issues"
+  },
+  "homepage": "https://github.com/AndreReliquias/identification-uniform-sys#readme",
+  "devDependencies": {
+    "aws-sdk": "^2.1376.0",
+    "aws-sdk-mock": "^5.7.0",
+    "k6": "0.0.0",
+    "serverless-dotenv-plugin": "^6.0.0",
+    "serverless-dynamodb-local": "0.2.37",
+    "serverless-offline": "^8.8.1",
+    "serverless-s3-local": "^0.7.2"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "serverless-auto-swagger": "^2.12.0",
+    "uuid": "^8.3.2"
+  }
+}

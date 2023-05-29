@@ -1,0 +1,606 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Swagger E-Commerce",
+    "description": "Essa documentação é referente a aplicação de um sistema de pedidos utilizando microsserviços",
+    "contact": {
+      "name": "André Reliquias",
+      "email": "andrereliquias.contato@gmail.com"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://github.com/AndreReliquias/wishlist-app/blob/main/LICENSE"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/local/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Autenticação",
+      "description": "Autenticação para acesso"
+    },
+		{
+      "name": "Pedidos",
+      "description": "Operações sobre os pedidos"
+    }
+  ],
+  "paths": {
+    "/credential": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Criação de uma nova credencial de acesso",
+        "requestBody": {
+          "description": "Informações necessárias para gerar uma credencial",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/credential"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Credencial criada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cpf": {
+                      "type": "string"
+                    },
+                    "nome": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "telefone": {
+                      "type": "string"
+                    },
+                    "criadoEm": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input inválido",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      }
+    },
+    "/credential/login": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Primeiro passo da autenticação",
+        "requestBody": {
+          "description": "Informações necessárias para autenticar um cliente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/credentialLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Primeira autenticação realizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "criadoEm": {
+                      "type": "string"
+                    },
+                    "expiraEm": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Usuário ou senha inválido",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      }
+    },
+    "/credential/login/two-step": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Segundo passo da autenticação",
+        "requestBody": {
+          "description": "Informações necessárias para autenticar um cliente",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/credentialLogin2Step"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Segunda autenticação realizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    },
+                    "criadoEm": {
+                      "type": "string"
+                    },
+                    "expiraEm": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Segundo fator de autenticação inválido",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      }
+    },
+    "/orders": {
+      "post": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Cria um novo pedido",
+        "requestBody": {
+          "description": "Informações necessárias para armazenar um novo pedido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Order"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+					"201": {
+						"description": "Pedido criado com sucesso",
+						"content": {
+							"application/json": {
+								"schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+							}
+						}
+					},
+          "400": {
+            "description": "Input inválido",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      },
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Busca todos os pedidos",
+        "responses": {
+          "200": {
+            "description": "Busca realizada com sucesso",
+            "content": {
+              "application/json": {
+								"schema": {
+                  "type": "array",
+                  "items":{
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/OrderResponse"
+                      }
+                    ]
+                  }
+                }
+							}
+            }
+          },
+          "400": {
+            "description": "Input inválido",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Busca um pedido",
+        "description": "ID do pedido para retorno de seus dados",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID do pedido",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+					"200": {
+						"description": "Pedido encontrado com sucesso",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/OrderResponse"
+								}
+							}
+						}
+					},
+          "404": {
+            "description": "Recurso não encontrado",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+      	}
+    	},
+      "put": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Modifica um pedido",
+        "description": "ID do pedido para alteração de seus dados",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID do pedido",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Informações necessárias para armazenar um novo pedido",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Order"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "concluido": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+						"description": "Pedido modificado com sucesso",
+						"content": {
+							"application/json": {
+								"schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+							}
+						}
+					},
+          "404": {
+            "description": "Recurso não encontrado",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      },
+      "delete": {
+        "tags": [
+          "Pedidos"
+        ],
+        "summary": "Apaga um pedido",
+        "description": "Realiza uma exclusão do pedido",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID do pedido",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Solicitação de exclusão realizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso não encontrado",
+            "content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+          },
+					"500": {
+						"description": "Erro interno do servidor",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiErrorResponse"
+								}
+							}
+						}
+					}
+        }
+      }
+		}
+  },
+  "components": {
+    "schemas": {
+      "credential": {
+        "required": [
+          "cpf",
+          "nome",
+          "email",
+          "telefone",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "cpf": {
+            "type": "string"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "telefone": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "credentialLogin": {
+        "required": [
+          "email",
+          "senha"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "senha": {
+            "type": "string"
+          }
+        }
+      },
+      "credentialLogin2Step": {
+        "required": [
+          "token",
+          "codigo"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "codigo": {
+            "type": "string"
+          }
+        }
+      },
+      "Order": {
+        "required": [
+          "item",
+          "quantidade"
+        ],
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "quantidade": {
+						"type": "string"
+					}
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "item": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "string"
+          },
+          "concluido": {
+            "type": "boolean"
+          },
+          "criadoEm": {
+            "type": "string"
+          },
+          "modificadoEm": {
+            "type": "string"
+          }
+        }
+      },
+			"ApiErrorResponse": {
+				"type": "object",
+				"properties": {
+					"recurso": {
+						"type": "string"
+					},
+					"erro": {
+						"type": "string"
+					}
+				}
+			}
+    }
+  }
+}
